@@ -83,12 +83,13 @@ class BodySection extends React.Component {
                     </div>
                     <div>
                         Note: Only the <a href="https://developers.docusign.com/esign-rest-api/reference/Envelopes/Envelopes/create"
-                            target="_blank">Envelopes:create</a> and <a 
+                            target="_blank" rel="noopener noreferrer">Envelopes:create</a> and <a 
                             href="https://developers.docusign.com/docs/esign-rest-api/reference/Envelopes/EnvelopeViews/createRecipient/" 
-                            target="_blank">EnvelopeViews:createRecipient</a> API calls are supported.
+                            target="_blank" rel="noopener noreferrer">EnvelopeViews:createRecipient</a> API calls are supported.
                     </div>
                     <Form.Group>
-                        <Form.Control as="textarea" onChange={evt => this.inputChange(evt)}
+                        <Form.Control as="textarea" spellcheck="false"
+                        onChange={evt => this.inputChange(evt)}
                         style={{ height: `${this.state.windowHeight - inputTextAreaY}px`,
                                  fontFamily: "Consolas, monaco, monospace", marginTop: "10px"}}
                         value={this.state.inputType==='json'?this.state.json:this.state.fluent} />
@@ -116,7 +117,7 @@ class BodySection extends React.Component {
                         <div style={{color: "orangered"}}>{this.state.errMsg}</div>
                         :
                         /**  <pre style={{whiteSpace: "pre-wrap"}}>{this.state.output}</pre> */
-                        <Form.Control as="textarea" readOnly
+                        <Form.Control as="textarea" readOnly spellcheck="false"
                         style={{ height: `${this.state.windowHeight - inputTextAreaY}px`, 
                                  fontFamily: "Consolas, monaco, monospace", marginTop: "44px"}}
                         value={this.state.output} />
@@ -193,7 +194,14 @@ class BodySection extends React.Component {
                 this.setState({output: JSON.stringify(json, null, 4), errMsg: null, errStringPos: null});
             } else {
                 const jsonToSdk = new JsonToSdk(this.appObject, this.sdkLanguage());
-                sdk = jsonToSdk.convert(json);
+                try {sdk = jsonToSdk.convert(json)}
+                catch {
+                    errMsg = `The input is valid JSON, but it is not valid as a request for the API.
+                    Check that attributes are correctly set as arrays, objects, arrays of objects, etc.
+                    You may want to stepwise test different parts of the JSON to see where the problem is.`;
+                    this.setState({errMsg: errMsg, errStringPos: null});
+                    return;    
+                }
                 this.setState({output: sdk, errMsg: null, errStringPos: null});
             }
         } else {
